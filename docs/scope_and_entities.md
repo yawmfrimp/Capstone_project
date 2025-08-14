@@ -24,3 +24,4 @@ Core domain: movies, reviews, auth
 - One user → Many Reviews
 - One Movie → Many Reviews
 - Unique Constraint: a User can post only one review per Movie
+- On deletion of a Movie: all Reviews of said movie are also deleted
