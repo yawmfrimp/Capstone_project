@@ -6,3 +6,5 @@
 | 2025‑08‑14	  |  Permissions                          | Admin‑only movie creation in v1	               | Amendable          | Ensures data integrity & avoids spam |
 | 2025‑08‑14	  |  Data Integrity                       | Review uniqueness by (user, movie)	           | Final              | Prevent duplicate reviews clutter |
 | 2025-08-14    |  Data Integrity                       | User email uniqueness                          | Amendable          | Prevents a single email from creating multiple accounts |
+| 2025-08-14    |  Data Integrity                       | Enforce rating between 1-5 inclusive           | Final              | Keeps review scores within a defined range |
+| 2025-08-14    |  Schema Design                        | fk relationships for review with on_delete=CASCADE | Final          | When the parent is deleted, all reviews are deleted as well |
