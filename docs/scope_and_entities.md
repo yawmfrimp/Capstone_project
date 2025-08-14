@@ -15,13 +15,14 @@ Core domain: movies, reviews, auth
 - Streaming links, payments
 ## Entity list and descriptions
 - **User**:
-  - `user_id`, `username`, `email`, `date joined` 
+  - `user_id`, `username`, `email`,  `password`, `date joined` 
 - **Movies**
-  - `movie_id`, `title`, `director`, `release_date`, `genre`, `trailer_link`
+  - `movie_id`, `title`, `director`, `description`, `release_date`, `genre`, `trailer_url`
 - **Reviews**
-  - `review_id`, `ratings(1-5)`, `comment`, `timestamp`, `created_at`
+  - `review_id`, `movie_id_fk`, `user_id_fkk`, `ratings(1-5)`, `comment`, `updated_at`, `created_at`
 ## Relationship mapping
 - One user → Many Reviews
 - One Movie → Many Reviews
 - Unique Constraint: a User can post only one review per Movie
 - On deletion of a Movie: all Reviews of said movie are also deleted
+- On deletion of a User: all reviews of said user are also deleted
