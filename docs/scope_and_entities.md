@@ -15,11 +15,27 @@ Core domain: movies, reviews, auth
 - Streaming links, payments
 ## Entity list and descriptions
 - **User**:
-  - `user_id`, `username`, `email`,  `password`, `date joined` 
+  - `user_id` → Primary Key, Auto-increment integer
+  - `username` → Char(100)
+  - `email` → Emailfield,  UNIQUE, case insensitive
+  - `password` → Char(128), stored hashed via Django's built-in auth
+  - `date joined` → Datefield, defaults to current_date
 - **Movies**
-  - `movie_id`, `title`, `director`, `description`, `release_date`, `genre`, `trailer_url`
+  - `movie_id`→ Primary Key, Auto-increment integer
+  - `title` → char(200), index for search queries
+  - `director` → Textfield, optional
+  - `description` → char(200), optional
+  - `release_date` → Datefield, YYYY-MM-DD
+  - `genre` → Char(100), optional
+  - `trailer_url` → URLfield, optional
 - **Reviews**
-  - `review_id`, `movie_id_fk`, `user_id_fkk`, `ratings(1-5)`, `comment`, `updated_at`, `created_at`
+  - `review_id` → Primary Key, Auto-increment integer
+  - `movie_id_fk` → Movie, on_delete=CASCADE
+  - `user_id_fk` → User, on_delete=CASCADE  
+  - `ratings(1-5)` → Integerfield, 1-5 range enforced at model level
+  - `comment` → textfield
+  - `updated_at` →DateTimefield, default timezone.now
+  - `created_at` →DateTimefield
 ## Relationship mapping
 - One user → Many Reviews
 - One Movie → Many Reviews
