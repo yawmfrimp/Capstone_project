@@ -37,5 +37,10 @@ class Review(models.Model):
     ]
     rating = models.SmallIntegerField(choices=RATING_CHOICES, default=1, help_text='Rating of the movie where 1 is the lowest and 5 is the highest')
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['movie', 'user'], name='unique_review_per_user_per_movie')
+        ]
+
     def __str__(self):
         return f'{self.user} rated {self.movie}, {self.rating}'
