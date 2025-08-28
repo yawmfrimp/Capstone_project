@@ -11,12 +11,19 @@ class Movie(models.Model):
     genre = models.CharField(max_length=100, null=True, blank=True)
     trailer_link = models.URLField(null=True, blank=True)
 
+    class Meta:
+        ordering = ['title']
+
     def __str__(self):
-        return f'{self.title} released on {self.release_date}'
+        return f'{self.title} released on ({self.release_date or 'No release date'})'
 
 '''model for user'''
 class User(AbstractUser):
     joined_date = models.DateField(default=date.today)
+    role = models.CharField(max_length=50, choices=[
+        ('admin', 'admin'),
+        ('member', 'member')
+    ], default='admin')
 
     def __str__(self):
         return self.username
@@ -41,6 +48,7 @@ class Review(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['movie', 'user'], name='unique_review_per_user_per_movie')
         ]
+        ordering = ['-created_at']
 
     def __str__(self):
         return f'{self.user} rated {self.movie}, {self.rating}'
