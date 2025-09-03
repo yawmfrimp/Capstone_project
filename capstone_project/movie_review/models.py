@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractUser
 
 '''model for movie'''
 class Movie(models.Model):
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=200, unique=True)
     description = models.TextField(null=True, blank=True)
     director = models.CharField(max_length=200)
     release_date = models.DateField(null=True, blank=True)
@@ -15,15 +15,16 @@ class Movie(models.Model):
         ordering = ['title']
 
     def __str__(self):
-        return f'{self.title} released on ({self.release_date or 'No release date'})'
+        return f'{self.title} released on ({self.release_date or "No release date"})'
 
 '''model for user'''
+from django.utils.timezone import now
 class User(AbstractUser):
-    joined_date = models.DateField(default=date.today)
+    joined_date = models.DateField(default=now)
     role = models.CharField(max_length=50, choices=[
         ('admin', 'admin'),
         ('member', 'member')
-    ], default='admin')
+    ], default='member')
 
     def __str__(self):
         return self.username
