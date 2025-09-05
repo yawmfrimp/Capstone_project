@@ -1,95 +1,131 @@
-from django.shortcuts import render, redirect, get_list_or_404, get_object_or_404
-from .models import Movie, Review
-from django.views.generic import DetailView, CreateView, DeleteView
-from django.contrib.auth.forms import UserCreationForm
-from django.urls import reverse_lazy
-from rest_framework.generics import RetrieveAPIView, ListAPIView
-from .serializer import MovieSerializer
-from django.forms import modelform_factory
-from django.contrib import messages
-from django.contrib.auth.decorators import permission_required, login_required, user_passes_test
+from django.shortcuts import get_object_or_404
+from .models import Movie, Review, User
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework import permissions, generics, status
+from .serializers import MovieSerializer, MovieDetailSerializer, ReviewSerializer, RegisterSerializer, UserSerializer
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate
 
 
 
 
-# Create your views here.
 
-def is_admin(user):
-    return user.is_authenticated and user.role == 'admin'
+class IsAdminUserRole(permissions.BasePermission):
+    '''Allows access only to users with role='admin' '''
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and request.user.role == 'admin')
 
-def is_member(user):
-     return user.is_authenticated and user.role == 'member'
+class IsMemberOrAdmin(permissions.BasePermission):
+    '''Allows access to authenticated users'''
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and request.user.role in ['admin', 'member'])
 
-'''An 'Admin' view that only users with the 'Admin' role can access.'''
-@login_required
-@user_passes_test(is_admin, login_url='login', redirect_field_name=None)
-def admin_view(request):
-    return render(request, 'movie_review/admin_view.html')
+class IsReviewOwnerOrAdmin(permissions.BasePermission):
+    '''Custom permission to allow only the review owner or admin to edit or delete a review.'''
+    def has_object_permission(self, request, view, obj):
+        return (
+            request.user.is_authenticated and
+            (obj.user == request.user or request.user.role == 'admin')
+        )
 
-class RegisterView(CreateView):
-    form_class = UserCreationForm
-    success_url = reverse_lazy('login')
-    template_name = 'movie_review/register.html'
+class RegisterAPIView(generics.CreateAPIView):
+    '''This view handles User Registerations'''
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
+    permission_classes = [AllowAny]
 
-class MovieDetailAPIView(RetrieveAPIView):
+class LoginAPIView(APIView):
+    '''This view handles User Login'''
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(username=username, password=password)
+        if user:
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({
+                'token': token.key,
+                'user': UserSerializer(user).data
+            })
+        else:
+            return Response({'error': 'Invalid username or password'}, status=status.HTTP_401_UNAUTHORIZED)
+
+class LogoutAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        request.user.auth_token.delete()
+        return Response({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
+
+class MovieListCreateAPIView(generics.ListCreateAPIView):
+    '''This view lists all the movies available or creates a new movie (only admins)'''
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
+
+    def get_permissions(self):
+        '''This function checks whether the user is an admin or memeber depending on the request method'''
+        if self.request.method == 'POST':
+            return [IsAdminUserRole()]
+        else:
+            return [permissions.AllowAny()]
+        
+class MovieRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    '''This view retrieves details of a particular movie, and also allows for updating or deleting movies (admin only)'''
+    queryset = Movie.objects.all()
+    serializer_class = MovieDetailSerializer
     lookup_field = 'title'
 
-def list_movies(request):
-    """This fucntion list all movies available"""
-    movies = Movie.objects.all()
-    context = {'movie_list': movies}
-    return render(request, 'movie_review/list_movies.html', context)
-    
-
-def list_reviews(request, title):
-    '''this function list reviews for a specific movie'''
-    movie = get_object_or_404(Movie, title=title)
-    reviews = get_list_or_404(Review, movie_title=title)
-    context = {'review_list': reviews, 'movie': movie}
-    return render(request,'movie_review/list_reviews.html', context)
-
-
-@login_required
-@permission_required('movie_review.delete_movie', raise_exception=True)
-def delete_movie(request,title):
-    """This function allows the admin to delete a movie by title"""
-    movie = get_object_or_404(Movie, title=title)
-    if request.method == 'POST':
-        movie.delete()
-        messages.success(request,f'"{movie.title}" was deleted.')
-        return redirect('list_movies')
-    return render(request, 'movie_review/movie_confirm_delete.html', {'movie': movie})
-
-MovieForm = modelform_factory(Movie, fields=['title', 'director'])
-
-@login_required
-@permission_required('movie_review.change_movie', raise_exception=True)
-def edit_movie(request,title):
-    '''This function allows the admin to edit the properties of a movie by title'''
-    movie = get_object_or_404(Movie, title=title)
-    if request.method == 'POST':
-        form = MovieForm(request.POST, instance=movie)
-        if form.is_valid():
-            form.save()
-            return redirect('list_movies')
-    else:
-        form = MovieForm(instance=movie)
-    
-    return render(request, 'relationship_app/movie_form.html', {
-        'form' : form,
-        'edit' : True,
-        'movie' : movie,
-    })
-
-@login_required
-@permission_required('movie_review.add_movie', raise_exception=True)
-def add_movie(request):
-    if request.method == 'POST':
-        form = MovieForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('list_movie')
+    def get_permissions(self):
+        '''This function checks whether a user is admin or member depending on the request method'''
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            return [IsAdminUserRole()]
         else:
-            form = MovieForm()
+            return [permissions.AllowAny()]
+        
+class ReviewListCreateAPIView(generics.ListCreateAPIView):
+    '''This view lists reviews for a movie or creates a review'''
+    serializer_class = ReviewSerializer
+
+    def get_queryset(self):
+        '''This function gets the reviews for a movie using the title as a look up'''
+        movie = get_object_or_404(Movie, title=self.kwargs['title'])
+        return Review.objects.filter(movie=movie)
+    
+    def get_permissions(self):
+        '''This function checks for whether a user is an admin or member'''
+        if self.request.method == 'POST':
+             return [IsMemberOrAdmin()]
+        else:
+            return [permissions.AllowAny()]
+        
+    def perform_create(self, serializer):
+        '''This fucntion creates a new review for a movie using the title as a look up'''
+        movie = get_object_or_404(Movie, title=self.kwargs['title'])
+        serializer.save(user=self.request.user, movie=movie)
+
+class ReviewRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    '''This view retrieves reviews for a movie, updates or delete a review (review owner or admin)'''
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+
+    def get_permissions(self):
+        '''This view checks for the permissions of a user depending on the request method'''
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            return [permissions.IsAuthenticated(), IsReviewOwnerOrAdmin()]
+        else:
+            return [permissions.AllowAny()]
+        
+class AdminCreateUserAPIView(generics.CreateAPIView):
+    '''This view is to create a new admin (admin only)'''
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
+    permission_classes = [IsAdminUserRole]
+
+    def perform_create(self, serializer):
+        serializer.save(role='admin')
+
+        
+
