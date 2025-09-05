@@ -12,3 +12,8 @@
 | 2025‑08‑28	  |  Data Integrity                       | Review uniqueness by (user, movie)	           | Final              | Prevent duplicate reviews clutter |
 | 2025-08-28      |  Schema Design                        | Modified the def strings to account for a null release date | Final | Prevent None value in def strings |
 | 2025-08-28      |  Permission                         | Created access based roles for the user          | Final              | To prevent ordinary users from having admin level permission |
+| 2025-09-05      |  Permissions                     | Only review owners can change their own review   | Final              | To prevent admins from changing reviews   |
+| 2025-09-05       |  Data Integrity                  | Movie Title made Unique                          | Final              | Title is used as a look up in views  |
+| 2025-09-05       |  Security                        | Default role set to admin                        | Final              | To prevent unauthorised access to admin views
+| 2025-09-05       |  Permission                      | Added a view for admin creation                  | Final              | Allows only admins to create other admins   |
+| 2025-09-05       | Performance                      | Changed date.today to now                        | Final              | Better performance of API   |
