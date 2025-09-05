@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'movie_review.apps.MovieReviewConfig'
+    'rest_framework',
+    'movie_review.apps.MovieReviewConfig'    
 ]
 
 AUTH_USER_MODEL = 'movie_review.User'
