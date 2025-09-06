@@ -44,12 +44,23 @@ class IsAdminUserRole(permissions.BasePermission):
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_authenticated and request.user.role == 'admin')
 
-
 class RegisterAPIView(generics.CreateAPIView):
-    '''This view handles User Registerations'''
-    queryset = User.objects.all()
-    serializer_class = RegisterSerializer
-    permission_classes = [AllowAny]
+    serializer_class = RegisterSerializer   # your serializer
+    # permission_classes, queryset etc.
+
+    def create(self, request, *args, **kwargs):
+        # 1. Let DRF run validation & save the user
+        resp = super().create(request, *args, **kwargs)
+
+        # 2. Grab the next URL, if any
+        next_url = request.query_params.get('next')
+        if next_url:
+            # 3. Change status to a redirect and set Location
+            resp.status_code = status.HTTP_303_SEE_OTHER
+            resp['Location'] = next_url
+
+        return resp
+
 
 class LoginAPIView(APIView):
     '''This view handles User Login'''
