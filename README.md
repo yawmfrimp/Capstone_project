@@ -23,6 +23,9 @@
 - **Reviews**: Reviews on movies by authenticated users on the site featurring a rating system from 1-5
 - For attribute level details click this link https://github.com/yawmfrimp/Capstone_project/blob/main/docs/scope_and_entities.md#entity-list-and-descriptions
 
+# API ENDPOINTS
+The list of API endpoints are available at (https://github.com/yawmfrimp/Capstone_project/blob/main/docs/api_endpoints.md)
+
 # TECH STACK
 - Django
 - Django REST Framework
