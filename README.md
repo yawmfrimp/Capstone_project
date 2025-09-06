@@ -14,8 +14,8 @@
 - For more details, check the scope and entities file (https://github.com/yawmfrimp/Capstone_project/blob/main/docs/scope_and_entities.md#in-scope-features-v1)
 
 # ENTITIES AND RELATIONSHIPS
-- ![ERD](https://github.com/user-attachments/assets/24513ee9-f423-415b-9e6d-431827c5bea6)
-- ## Entity list and descriptions
+![ERD](https://github.com/user-attachments/assets/24513ee9-f423-415b-9e6d-431827c5bea6)
+## Entity list and descriptions
 - **User**: Authenticated users on the platform who can post reviews, edit and delete their own reviews
 
 - **Movies**: Movies that will be curated by admins for the site
